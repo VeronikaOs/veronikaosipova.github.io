@@ -14,12 +14,15 @@
   <script src="https://cdn.tailwindcss.com" defer></script>
 
   <style>
+    :root { --glow: 0 0 24px rgba(99,102,241,.35); }
     .fade-in { animation: fade-in .6s ease-out both; }
     @keyframes fade-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
-    .badge { display:inline-block; padding:.125rem .5rem; border-radius:.5rem; font-size:.75rem; }
+    .glass { background: rgba(255,255,255,.75); backdrop-filter: blur(8px); }
+    .grad-text { background: linear-gradient(90deg,#6366f1,#22d3ee,#a78bfa); -webkit-background-clip: text; background-clip: text; color: transparent; }
   </style>
 
   <script>
+    // ===== Profile data =====
     const PROFILE = {
       name: 'Veronika Osipova',
       tagline: 'AI Automation Specialist · Prompt Engineer',
@@ -27,7 +30,7 @@
       email: 'vera.vera.osipova.99@gmail.com',
       phone: '+39 379 272 2667',
       headline: 'Building AI Agents & Multi‑Agents. Automating business processes.',
-      summary: 'AI automation specialist skilled in identifying business needs, designing automation aligned with strategic goals, and defining digitalization strategies. 5+ years in AI automation, product management, and legaltech. Building and implementing AI workflows and no‑code automation to reduce costs, eliminate manual work, and accelerate decision‑making. Tools: n8n, Claude Sonnet, Cursor, Power BI, GPT pipelines, function calling.',
+      summary: 'AI automation specialist skilled in identifying business needs, designing automation aligned with strategic goals, and defining digitalization strategies. 5+ years in AI automation, product management, and legaltech. Building and implementing AI workflows and no‑code automation to reduce costs, eliminate manual work, and accelerate decision‑making.',
       photo: 'myphoto.jpg',
       links: {
         linkedin: 'https://www.linkedin.com/in/veronika-osipova',
@@ -68,23 +71,92 @@
         'CS50 — Harvard'
       ],
       languages: ['English C1', 'Russian Native', 'Italian Working Proficiency', 'German/Spanish Elementary'],
-      video: null
     };
+
+    function buildVCard(p){
+      const v = [
+        'BEGIN:VCARD','VERSION:3.0',
+        'N:Osipova;Veronika;;;',
+        `FN:${p.name}`,
+        `TITLE:${p.tagline}`,
+        `TEL;TYPE=CELL:${p.phone}`,
+        `EMAIL;TYPE=INTERNET:${p.email}`,
+        `ADR;TYPE=WORK:;;${p.location};;;;`,
+        `URL:${p.links.linkedin || ''}`,
+        'END:VCARD'
+      ].join('\n');
+      return 'data:text/vcard;charset=utf-8,' + encodeURIComponent(v);
+    }
+
+    function safeSetHref(id, href){ const a = document.getElementById(id); if (!a) return; if (!href) { a.remove(); return; } a.href = href; }
+    function fillList(targetId, items){ const ul = document.getElementById(targetId); if (!ul) return; items.forEach(txt => { const li = document.createElement('li'); li.textContent = txt; ul.appendChild(li); }); }
+
+    async function initPage(){
+      // Hero
+      document.getElementById('name').textContent = PROFILE.name;
+      document.getElementById('tagline').textContent = PROFILE.tagline;
+      document.getElementById('headline').textContent = PROFILE.headline;
+      document.getElementById('summary').textContent = PROFILE.summary;
+      const img = document.getElementById('photo');
+      img.src = PROFILE.photo; img.alt = PROFILE.name;
+      img.onerror = () => { img.replaceWith(Object.assign(document.createElement('div'), { className:'size-24 rounded-2xl bg-zinc-200 grid place-items-center', innerText:'photo' })); };
+
+      // Links
+      safeSetHref('lnk-linkedin', PROFILE.links.linkedin);
+      safeSetHref('lnk-github', PROFILE.links.github);
+      safeSetHref('lnk-telegram', PROFILE.links.telegram);
+      safeSetHref('lnk-email', PROFILE.links.email);
+
+      // Projects
+      const projWrap = document.getElementById('projects');
+      PROFILE.projects.forEach(p => {
+        const a = document.createElement('a'); a.href = p.url || '#';
+        a.className = 'block p-4 rounded-2xl border hover:shadow-md transition fade-in';
+        a.innerHTML = `<div class="text-lg font-semibold">${p.title}</div><div class="text-sm text-zinc-500">${p.note}</div>`;
+        projWrap.appendChild(a);
+      });
+
+      // Cases
+      const casesWrap = document.getElementById('cases');
+      PROFILE.cases.forEach(cs => {
+        const card = document.createElement('div'); card.className = 'p-4 rounded-2xl border space-y-2';
+        const h = document.createElement('div'); h.className = 'font-semibold'; h.textContent = `${cs.company} · ${cs.period}`;
+        const ul = document.createElement('ul'); ul.className = 'list-disc pl-5 text-sm text-zinc-700 space-y-1';
+        cs.bullets.forEach(b => { const li = document.createElement('li'); li.textContent = b; ul.appendChild(li); });
+        card.appendChild(h); card.appendChild(ul); casesWrap.appendChild(card);
+      });
+
+      // Middle-wide lists
+      fillList('edu', PROFILE.education);
+      fillList('certs', PROFILE.certs);
+      fillList('langs', PROFILE.languages);
+
+      // vCard
+      const vbtn = document.getElementById('btn-vcard'); vbtn.href = buildVCard(PROFILE); vbtn.download = 'VeronikaOsipova.vcf';
+
+      // JSON‑LD
+      const url = window.location.href;
+      const ld = { '@context':'https://schema.org','@type':'Person', name: PROFILE.name, jobTitle: PROFILE.tagline, email: PROFILE.email, telephone: PROFILE.phone, image: PROFILE.photo, url, sameAs: [PROFILE.links.linkedin, PROFILE.links.github, PROFILE.links.telegram].filter(Boolean) };
+      const s = document.createElement('script'); s.type='application/ld+json'; s.textContent = JSON.stringify(ld); document.head.appendChild(s);
+    }
+
+    document.addEventListener('DOMContentLoaded', initPage);
   </script>
 </head>
-<body class="bg-white text-zinc-900 antialiased selection:bg-zinc-900 selection:text-white">
-  <main class="max-w-3xl mx-auto px-5 py-10">
+<body class="bg-gradient-to-b from-zinc-50 via-white to-zinc-50 text-zinc-900 antialiased selection:bg-indigo-600 selection:text-white">
+  <main class="max-w-4xl mx-auto px-6 py-12">
+    <!-- HERO -->
     <section class="flex items-center gap-6">
-      <img id="photo" alt="photo" class="size-24 rounded-2xl object-cover" />
+      <img id="photo" alt="photo" class="w-28 h-28 rounded-2xl object-cover ring-2 ring-indigo-400 shadow-[var(--glow)]" />
       <div>
-        <h1 id="name" class="text-2xl font-bold"></h1>
-        <p id="tagline" class="text-zinc-600 mt-1"></p>
-        <p class="mt-1 text-zinc-800 text-base font-medium">I help businesses automate and scale with AI</p>
+        <h1 id="name" class="text-3xl font-bold grad-text"></h1>
+        <p id="tagline" class="text-zinc-700 mt-1"></p>
+        <p class="mt-1 text-zinc-900 text-base font-medium">I help businesses automate and scale with AI</p>
         <p id="headline" class="mt-3 text-lg"></p>
       </div>
-      <div class="ml-auto" id="qrcode" aria-label="QR to this page"></div>
     </section>
 
+    <!-- CTA -->
     <section class="mt-6 flex flex-wrap gap-3">
       <a id="btn-vcard" class="px-4 py-2 rounded-xl border hover:bg-zinc-50 transition" href="#">Download Contact (.vcf)</a>
       <a id="lnk-linkedin" class="px-4 py-2 rounded-xl border hover:bg-zinc-50 transition" target="_blank">LinkedIn</a>
@@ -93,55 +165,59 @@
       <a id="lnk-email" class="px-4 py-2 rounded-xl border hover:bg-zinc-50 transition">Email</a>
     </section>
 
-    <section class="mt-8">
+    <!-- ABOUT -->
+    <section class="mt-8 glass rounded-2xl p-6 border">
       <h2 class="text-xl font-semibold mb-2">About Me</h2>
       <p id="summary" class="text-zinc-700 leading-relaxed"></p>
-      <div class="mt-3 text-sm text-zinc-600">Tools: n8n · Claude Sonnet · Cursor · Power BI · GPT function calling</div>
+      <div class="mt-3 text-sm text-zinc-600">Tools: n8n · Claude Code · Cursor · Power BI · GPT function calling</div>
     </section>
 
-    <section class="mt-8 bg-zinc-50 border rounded-2xl p-6 shadow-sm">
+    <!-- VALUE PROP -->
+    <section class="mt-8 bg-white border rounded-2xl p-6 shadow-sm">
       <h2 class="text-2xl font-bold mb-4 text-zinc-900">How I Help Businesses</h2>
-      <p class="mb-4 text-zinc-700">I work with businesses of any size to identify their needs, design automation aligned with goals, and implement AI-driven digitalization strategies that reduce costs, boost efficiency, and accelerate growth.</p>
+      <p class="mb-4 text-zinc-700">I work with businesses of any size to identify their needs, design automation aligned with goals, and implement AI‑driven digitalization strategies that reduce costs, boost efficiency, and accelerate growth.</p>
       <ul class="grid md:grid-cols-2 gap-3 text-zinc-800 text-sm">
         <li class="p-3 border rounded-xl bg-white hover:shadow">Identifying business needs and defining automation strategies aligned with goals</li>
         <li class="p-3 border rounded-xl bg-white hover:shadow">Designing and implementing digitalization strategies for business processes</li>
-        <li class="p-3 border rounded-xl bg-white hover:shadow">Building AI Agents and Multi-Agents for automation and decision support</li>
-        <li class="p-3 border rounded-xl bg-white hover:shadow">No-code and low-code automation using n8n</li>
+        <li class="p-3 border rounded-xl bg-white hover:shadow">Building AI Agents and Multi‑Agents for automation and decision support</li>
+        <li class="p-3 border rounded-xl bg-white hover:shadow">No‑code and low‑code automation using n8n</li>
         <li class="p-3 border rounded-xl bg-white hover:shadow">Advanced prompt engineering and AI pipelines with GPT</li>
         <li class="p-3 border rounded-xl bg-white hover:shadow">Productivity and coding tools: Cursor, Claude Sonnet, Power BI</li>
       </ul>
     </section>
 
+    <!-- PROJECTS -->
     <section class="mt-8">
       <h2 class="text-xl font-semibold mb-3">Projects</h2>
       <div id="projects" class="grid grid-cols-1 gap-3"></div>
     </section>
 
+    <!-- CASE STUDIES -->
     <section class="mt-8">
       <h2 class="text-xl font-semibold mb-3">Case Studies</h2>
       <div id="cases" class="grid grid-cols-1 gap-3"></div>
     </section>
 
-    <section class="mt-10 grid md:grid-cols-3 gap-6">
-      <div class="md:col-span-2">
-        <details class="border rounded-2xl p-4 text-sm text-zinc-600">
-          <summary class="cursor-pointer">Diagnostics & Tests</summary>
-          <ul id="tests" class="list-disc pl-6 mt-2 space-y-1"></ul>
-          <p class="mt-2 text-zinc-500">Autotests check QRCode.js, vCard, links, JSON‑LD, and lists.</p>
-        </details>
-      </div>
-      <div class="border rounded-2xl p-4">
-        <h3 class="font-semibold mb-2">Education</h3>
-        <ul id="edu" class="list-disc pl-5 text-sm space-y-1"></ul>
-        <h3 class="font-semibold mt-4 mb-2">Certificates</h3>
-        <ul id="certs" class="list-disc pl-5 text-sm space-y-1"></ul>
-        <h3 class="font-semibold mt-4 mb-2">Languages</h3>
-        <ul id="langs" class="list-disc pl-5 text-sm space-y-1"></ul>
+    <!-- EDUCATION / CERTS / LANGS CENTERED WIDE -->
+    <section class="mt-10">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="rounded-2xl p-5 border glass">
+          <h3 class="font-semibold mb-2">Education</h3>
+          <ul id="edu" class="list-disc pl-5 text-sm space-y-1"></ul>
+        </div>
+        <div class="rounded-2xl p-5 border glass">
+          <h3 class="font-semibold mb-2">Certificates</h3>
+          <ul id="certs" class="list-disc pl-5 text-sm space-y-1"></ul>
+        </div>
+        <div class="rounded-2xl p-5 border glass">
+          <h3 class="font-semibold mb-2">Languages</h3>
+          <ul id="langs" class="list-disc pl-5 text-sm space-y-1"></ul>
+        </div>
       </div>
     </section>
 
-    <footer class="mt-8 pt-6 border-t text-sm text-zinc-500">
-      <p>QR links to this page. On iOS/Android the “Download Contact” button adds a vCard to the address book.</p>
+    <footer class="mt-10 pt-6 border-t text-sm text-zinc-500">
+      <p>Contact: <a class="underline" href="mailto:vera.vera.osipova.99@gmail.com">vera.vera.osipova.99@gmail.com</a></p>
     </footer>
   </main>
 </body>
